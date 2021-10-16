@@ -1,6 +1,6 @@
+import sys
 import cv2 as cv
 import numpy as np
-from matplotlib import pyplot as plt
 import ctypes
 import keyboard
 
@@ -27,16 +27,16 @@ def show_webcam(mirror=False, mode=0):
 
         light_yellow = np.array([23, 100, 100])
         dark_yellow = np.array([40, 255, 255])
+        light_green = np.array([70, 100, 20])
+        dark_green = np.array([90, 255, 255])
 
-        mask = cv.inRange(hsv_img, light_yellow, dark_yellow)
+        light_color = light_green
+        dark_color = dark_green
 
+        mask = cv.inRange(hsv_img, light_color, dark_color)
         points = cv.findNonZero(mask)
-        print(np.mean(points, axis=0))
-        avg = np.mean(points, axis=0)[0]
 
         res = cv.bitwise_and(img, img, mask=mask)
-
-        cv.circle(res, (int(avg[0]), int(avg[1])), 3, (255,0,0), 3)
 
         dimensions = res.shape
         width = dimensions[1]
@@ -44,8 +44,12 @@ def show_webcam(mirror=False, mode=0):
         xsec = int(width/3)
         ysec = int(height/2)
 
-        keyboard.write(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
-        print(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
+        if points is not None:
+            avg = np.mean(points, axis=0)[0]
+            cv.circle(res, (int(avg[0]), int(avg[1])), 3, (255,0,0), 3)
+
+            keyboard.write(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
+            keyboard.write('\n')
 
         for i in range(2):
             for j in range(3):
@@ -55,16 +59,15 @@ def show_webcam(mirror=False, mode=0):
         cv.line(res, (2*xsec, 0), (2*xsec, height), (255,255,255), 5)
         cv.line(res, (0, ysec), (width, ysec), (255,255,255), 5)
 
-        plt.imshow(res, vmin=0, vmax=255)
+        cv.imshow("Raw", img)
+        cv.imshow("Yellow", res)
 
-        plt.pause(0.05)
 
         #cv2.imshow('my webcam', img)
         if cv.waitKey(1) == 27: 
             break  # esc to quit
     #cv2.destroyAllWindows()
 
-plt.show()
 
 def main():
     show_webcam(mirror=True, mode=1)
