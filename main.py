@@ -1,36 +1,17 @@
-from ahk import AHK
-from ahk.window import Window
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 import ctypes
+import keyboard
 
-ahk = AHK(executable_path='D:\Downloads\AutoHotkey_1.1.33.10\AutoHotKeyU64.exe')
-
-win = ahk.find_window(title=b'Sin titulo: Bloc de notas')
 
 keys = [['A', 'Up', 'B'],
         ['Left', 'Down', 'Right']]
 
 font = cv.FONT_HERSHEY_SIMPLEX
 
-#print(win.title)
-
-'''
-user = ctypes.windll.user32
-
-print(user.GetSystemMetrics(0))
-print(user.GetSystemMetrics(1))
-'''
-
-#win.activate()
-
-#ahk.type('Hello world!')
-
 def show_webcam(mirror=False, mode=0):
-    win.activate()
-
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(0, cv.CAP_DSHOW)
     while True:
 
         ret_val, img = cam.read()
@@ -44,12 +25,13 @@ def show_webcam(mirror=False, mode=0):
 
         hsv_img = cv.cvtColor(img, cv.COLOR_RGB2HSV)
 
-        light_green = (70, 100, 20)
-        dark_green = (90, 255, 255)
+        light_yellow = np.array([23, 100, 100])
+        dark_yellow = np.array([40, 255, 255])
 
-        mask = cv.inRange(hsv_img, light_green, dark_green)
+        mask = cv.inRange(hsv_img, light_yellow, dark_yellow)
 
         points = cv.findNonZero(mask)
+        print(np.mean(points, axis=0))
         avg = np.mean(points, axis=0)[0]
 
         res = cv.bitwise_and(img, img, mask=mask)
@@ -62,7 +44,8 @@ def show_webcam(mirror=False, mode=0):
         xsec = int(width/3)
         ysec = int(height/2)
 
-        win.send(keys[int(avg[1]/ysec)][int(avg[0]/xsec)] + '`n')
+        keyboard.write(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
+        print(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
 
         for i in range(2):
             for j in range(3):
@@ -88,4 +71,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except(KeyboardInterrupt):
+        print('bai')
