@@ -1,16 +1,18 @@
 import sys
+from threading import current_thread
 import cv2 as cv
 import numpy as np
 import ctypes
 import keyboard
 
 
-keys = [['A', 'Up', 'B'],
-        ['Left', 'Down', 'Right']]
+keys = [['enter', 'w', 'esc'],
+        ['a', 's', 'd']]
 
 font = cv.FONT_HERSHEY_SIMPLEX
 
 def show_webcam(mirror=False, mode=0):
+    pressed_key = 'a'
     cam = cv.VideoCapture(0, cv.CAP_DSHOW)
     while True:
 
@@ -21,7 +23,10 @@ def show_webcam(mirror=False, mode=0):
         img = cv.cvtColor(img, cv.IMREAD_COLOR)
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-        img = cv.GaussianBlur(img, (5,5), 0)
+        blur = cv.blur(img,(5,5))
+        blur0 = cv.medianBlur(blur,5)
+        blur1 = cv.GaussianBlur(blur0,(5,5),0)
+        img = cv.bilateralFilter(blur1,9,75,75)
 
         hsv_img = cv.cvtColor(img, cv.COLOR_RGB2HSV)
 
@@ -33,7 +38,11 @@ def show_webcam(mirror=False, mode=0):
         light_color = light_green
         dark_color = dark_green
 
+        kernel = np.ones((5,5), np.uint8)
+
         mask = cv.inRange(hsv_img, light_color, dark_color)
+        mask = cv.dilate(mask, kernel, iterations=5)
+        mask = cv.erode(mask, kernel, iterations=5)
         points = cv.findNonZero(mask)
 
         res = cv.bitwise_and(img, img, mask=mask)
@@ -48,8 +57,13 @@ def show_webcam(mirror=False, mode=0):
             avg = np.mean(points, axis=0)[0]
             cv.circle(res, (int(avg[0]), int(avg[1])), 3, (255,0,0), 3)
 
-            keyboard.write(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
-            keyboard.write('\n')
+            #keyboard.write(keys[int(avg[1]/ysec)][int(avg[0]/xsec)])
+            #keyboard.write('\n')
+            current_key = keys[int(avg[1]/ysec)][int(avg[0]/xsec)]
+            if current_key != pressed_key:
+                keyboard.release(pressed_key)
+                keyboard.press(current_key)
+                pressed_key = current_key
 
         for i in range(2):
             for j in range(3):
@@ -67,6 +81,7 @@ def show_webcam(mirror=False, mode=0):
         if cv.waitKey(1) == 27: 
             break  # esc to quit
     #cv2.destroyAllWindows()
+    keyboard.release(pressed_key)
 
 
 def main():
