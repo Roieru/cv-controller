@@ -1,0 +1,4 @@
+alt+tab
+enter
+windows+down
+d
