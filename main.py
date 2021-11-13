@@ -15,8 +15,9 @@ MACROS_FILE = 'macros.txt'
 AMIIBO_DIR = 'amiibo'
 
 
-keys = [['e', 'w', 'r'],
-        ['a', 's', 'd']]
+keys = [['w+a', 'w', 'w+d'],
+        ['a', 'space', 'd'],
+        ['a+s', 's', 's+d']]
 
 try:
     with open(MACROS_FILE) as file:
@@ -24,7 +25,7 @@ try:
 
     orb = cv.ORB_create()
 
-    amiibo_names = [figure for figure in listdir(getcwd()) if figure[0] == 'a']
+    amiibo_names = [figure for figure in listdir(getcwd()) if figure[0] == 'a' and figure.split('.')[-1] == 'jpg']
     amiibo = []
     for index in range(0, len(amiibo_names)):
         figure = {}
@@ -43,31 +44,32 @@ def show_webcam(mirror=True, mode=0):
     pressed_key = 'a'
     active_macro = False
     macro_frames = 0
-    is_impostor = False
-    line_color = (0, 0, 255)
+    line_color = (255, 0, 0)
     is_in_task = False
 
     while True:
-        location = pyautogui.locateOnScreen('impostor.png', confidence = 0.5)
+        location = pyautogui.locateOnScreen('impostor.png', confidence = 0.2)
         if location is not None:
             print("Impostor!")
-            is_impostor = True
-            line_color = (255, 0, 0)
+            line_color = (0, 0, 255)
             break
-        location = pyautogui.locateOnScreen('crewmate.png', confidence = 0.5)
+        location = pyautogui.locateOnScreen('crewmate.png', confidence = 0.2)
         if location is not None:
             print("Crewmate!")
             break
 
     cam = cv.VideoCapture(0, cv.CAP_DSHOW)
+    frame_counter = 0
     while True:
 
-        location = pyautogui.locateOnScreen('close.png', grayscale=True, confidence = 0.7)
-        if location is not None:
-            print("X!")
-            is_in_task = True
-        else:
-            is_in_task = False
+        if frame_counter == 0:
+            location = pyautogui.locateOnScreen('close.png', grayscale=True, confidence = 0.7)
+            if location is not None:
+                print("X!")
+                is_in_task = True
+            else:
+                is_in_task = False
+        frame_counter = (frame_counter + 1) % 30
 
         ret_val, orimg = cam.read()
         if not ret_val or orimg is None:
@@ -86,8 +88,10 @@ def show_webcam(mirror=True, mode=0):
 
             hsv_img = cv.cvtColor(img, cv.COLOR_RGB2HSV)
 
-            lred1 = (110, 40, 50)
-            lred2 = (150, 255, 170)
+            #lred1 = (110, 40, 50)
+            #lred2 = (150, 255, 170)
+            lred1 = (140, 100, 20)
+            lred2 = (175, 255, 255)
 
             dimensions = img.shape
             width = dimensions[1]
@@ -215,7 +219,7 @@ def show_webcam(mirror=True, mode=0):
             width = dimensions[1]
             height = dimensions[0]
             xsec = int(width/3)
-            ysec = int(height/2)
+            ysec = int(height/3)
 
             if points is not None:
                 avg = np.mean(points, axis=0)[0]
@@ -231,13 +235,14 @@ def show_webcam(mirror=True, mode=0):
             else:
                 keyboard.release(pressed_key)
 
-            for i in range(2):
+            for i in range(3):
                 for j in range(3):
                     cv.putText(res, keys[i][j], (xsec*j + 10, ysec*i + 40), font, 0.7, (255,255,255), 2, cv.LINE_AA)
 
             cv.line(res, (xsec, 0), (xsec, height), line_color, 5)
-            cv.line(res, (2*xsec, 0), (2*xsec, height), line_color, 5)
+            cv.line(res, (xsec*2, 0), (xsec*2, height), line_color, 5)
             cv.line(res, (0, ysec), (width, ysec), line_color, 5)
+            cv.line(res, (0, ysec*2), (width, ysec*2), line_color, 5)
 
         cv.imshow("Raw", orimg)
         cv.imshow("Grid", res)
