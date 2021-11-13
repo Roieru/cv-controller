@@ -1,4 +1,5 @@
-alt+tab
-enter
-windows+down
-d
+e
+r
+q
+shift+tab
+alt+f4

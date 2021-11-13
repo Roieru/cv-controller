@@ -14,7 +14,7 @@ MACROS_FILE = 'macros.txt'
 AMIIBO_DIR = 'amiibo'
 
 
-keys = [['enter', 'w', 'esc'],
+keys = [['e', 'w', 'r'],
         ['a', 's', 'd']]
 
 try:
@@ -136,6 +136,8 @@ def show_webcam(mirror=False, mode=0):
                 keyboard.release(pressed_key)
                 keyboard.press(current_key)
                 pressed_key = current_key
+        else:
+            keyboard.release(pressed_key)
 
         for i in range(2):
             for j in range(3):
