@@ -1,5 +1,5 @@
 e
 r
 q
-shift+tab
+tab
 alt+f4

@@ -16,8 +16,12 @@ AMIIBO_DIR = 'amiibo'
 
 
 keys = [['w+a', 'w', 'w+d'],
-        ['a', 'space', 'd'],
+        ['a', 'q', 'd'],
         ['a+s', 's', 's+d']]
+
+icons = [['', '^', ''],
+         ['<', 'o', '>'],
+         ['', 'v', '']]
 
 try:
     with open(MACROS_FILE) as file:
@@ -48,12 +52,12 @@ def show_webcam(mirror=True, mode=0):
     is_in_task = False
 
     while True:
-        location = pyautogui.locateOnScreen('impostor.png', confidence = 0.2)
+        location = pyautogui.locateOnScreen('impostor.png', confidence = 0.5)
         if location is not None:
             print("Impostor!")
             line_color = (0, 0, 255)
             break
-        location = pyautogui.locateOnScreen('crewmate.png', confidence = 0.2)
+        location = pyautogui.locateOnScreen('crewmate.png', confidence = 0.5)
         if location is not None:
             print("Crewmate!")
             break
@@ -80,6 +84,7 @@ def show_webcam(mirror=True, mode=0):
             orimg = cv.flip(orimg, 1)
 
         if is_in_task:
+            shape = 'unknown'
             img = orimg.copy()
             img = cv.cvtColor(img, cv.IMREAD_COLOR)
             img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
@@ -88,10 +93,10 @@ def show_webcam(mirror=True, mode=0):
 
             hsv_img = cv.cvtColor(img, cv.COLOR_RGB2HSV)
 
-            #lred1 = (110, 40, 50)
-            #lred2 = (150, 255, 170)
-            lred1 = (140, 100, 20)
-            lred2 = (175, 255, 255)
+            lred3 = (0, 100, 50)
+            lred4 = (25, 255, 255)
+            lred1 = (130, 100, 20)
+            lred2 = (180, 255, 255)
 
             dimensions = img.shape
             width = dimensions[1]
@@ -100,6 +105,9 @@ def show_webcam(mirror=True, mode=0):
             ysec = int(height/3)
 
             mask = cv.inRange(hsv_img, lred1, lred2)
+            mask2 = cv.inRange(hsv_img, lred3, lred4)
+
+            mask = mask + mask2
 
             res = cv.bitwise_and(img, img, mask=mask)
 
@@ -129,8 +137,10 @@ def show_webcam(mirror=True, mode=0):
                 shape = sd.detect(c)
 
                 if mouse.is_pressed() and shape == "rectangle":
+                    shape = 'move'
                     mouse.release()
                 elif not mouse.is_pressed() and shape == "circle":
+                    shape = 'click'
                     mouse.press()
 
             if points is not None:
@@ -150,6 +160,8 @@ def show_webcam(mirror=True, mode=0):
             cv.line(res, (xsec*2, 0), (xsec*2, height), line_color, 5)
             cv.line(res, (0, ysec), (width, ysec), line_color, 5)
             cv.line(res, (0, ysec*2), (width, ysec*2), line_color, 5)
+
+            cv.putText(res, shape, (xsec*1 + 65, ysec*1 + 85), font, 0.7, (255,255,255), 2, cv.LINE_AA)
         else:
             orb = cv.ORB_create()
             bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
@@ -181,7 +193,7 @@ def show_webcam(mirror=True, mode=0):
                 #print('VICTORIA: ', amiibo[current_index]['name'])
                 if not active_macro and macro_frames > 75:
                     keyboard.press_and_release(amiibo[current_index]['macro'])
-                    print('MACRO: ', amiibo[current_index]['name'])
+                    print('MACRO: ', amiibo[current_index]['name'], ' : ', current_score)
                     macro_frames = 0
                     active_macro = True
             else:
@@ -198,10 +210,12 @@ def show_webcam(mirror=True, mode=0):
 
             hsv_img = cv.cvtColor(img, cv.COLOR_RGB2HSV)
 
-            light_yellow = np.array([23, 100, 100])
+            light_yellow = np.array([15, 90, 100])
             dark_yellow = np.array([40, 255, 255])
-            light_green = np.array([70, 100, 20])
-            dark_green = np.array([90, 255, 255])
+            light_green = np.array([70, 90, 20])
+            dark_green = np.array([100, 255, 255])
+            light_blue = np.array([90, 100, 20])
+            dark_blue = np.array([130, 255, 255])
 
             light_color = light_green
             dark_color = dark_green
@@ -237,7 +251,7 @@ def show_webcam(mirror=True, mode=0):
 
             for i in range(3):
                 for j in range(3):
-                    cv.putText(res, keys[i][j], (xsec*j + 10, ysec*i + 40), font, 0.7, (255,255,255), 2, cv.LINE_AA)
+                    cv.putText(res, icons[i][j], (xsec*j + 100, ysec*i + 85), font, 0.7, (255,255,255), 2, cv.LINE_AA)
 
             cv.line(res, (xsec, 0), (xsec, height), line_color, 5)
             cv.line(res, (xsec*2, 0), (xsec*2, height), line_color, 5)
